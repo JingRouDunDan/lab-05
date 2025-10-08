@@ -22,6 +22,7 @@ import java.util.ArrayList;
 public class MainActivity extends AppCompatActivity implements CityDialogFragment.CityDialogListener {
 
     private Button addCityButton;
+    private Button deleteCityButton;
     private ListView cityListView;
 
     private ArrayList<City> cityArrayList;
@@ -30,6 +31,7 @@ public class MainActivity extends AppCompatActivity implements CityDialogFragmen
     private FirebaseFirestore db;
 
     private CollectionReference citiesRef;
+    private boolean isDelete = false;
 
 
     @Override
@@ -53,6 +55,15 @@ public class MainActivity extends AppCompatActivity implements CityDialogFragmen
         cityListView.setAdapter(cityArrayAdapter);
 
         //addDummyData();
+        deleteCityButton = findViewById(R.id.buttonDeleteCity);
+        deleteCityButton.setOnClickListener(view -> {
+            isDelete = !isDelete;
+            if (isDelete) {
+                deleteCityButton.setText("Cancel Delete");
+            } else {
+                deleteCityButton.setText("Delete City");
+            }
+        });
 
         // set listeners
         addCityButton.setOnClickListener(view -> {
@@ -62,8 +73,12 @@ public class MainActivity extends AppCompatActivity implements CityDialogFragmen
 
         cityListView.setOnItemClickListener((adapterView, view, i, l) -> {
             City city = cityArrayAdapter.getItem(i);
-            CityDialogFragment cityDialogFragment = CityDialogFragment.newInstance(city);
-            cityDialogFragment.show(getSupportFragmentManager(),"City Details");
+            if (isDelete){
+                deleteCity(city);
+            } else {
+                CityDialogFragment cityDialogFragment = CityDialogFragment.newInstance(city);
+                cityDialogFragment.show(getSupportFragmentManager(), "City Details");
+            }
         });
 
         db = FirebaseFirestore.getInstance();
@@ -86,7 +101,11 @@ public class MainActivity extends AppCompatActivity implements CityDialogFragmen
             }
         });
     }
-
+    private void deleteCity(City city) {
+        cityArrayList.remove(city);
+        cityArrayAdapter.notifyDataSetChanged();
+        citiesRef.document(city.getName()).delete();
+    }
 
 
 
